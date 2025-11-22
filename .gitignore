@@ -1,0 +1,51 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environment
+venv/
+env/
+.venv/
+ENV/
+
+# ---- FastAPI / Uvicorn ----
+# Uvicorn logs
+*.log
+
+# ---- Build / Packaging ----
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ---- IDE / Editors ----
+# VSCode
+.vscode/
+# PyCharm
+.idea/
+
+# ---- OS Files ----
+.DS_Store
+Thumbs.db
+
+# ---- Environment / Secrets ----
+.env
+.env.*
+*.env
+secrets.json
+
+# ---- Testing ----
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ---- MyPy / Lint / Type checkers ----
+.mypy_cache/
+.pyre/
+.pytype/
+
+# ---- Cache ----
+.cache/
