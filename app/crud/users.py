@@ -1,47 +1,47 @@
 from sqlalchemy.orm import Session
-from app.models import User
-from app.schemas import UserCreate, UserUpdate
 from typing import Optional
+from pwdlib import PasswordHash
+from app.models.users import User
+from app.schemas.users import UserCreate, UserUpdate
 
-# ------------------------------
-# Get user by email
-# ------------------------------
+
+# Password hashing instance
+password_hash = PasswordHash.recommended()
+
+def hash_password(password: str) -> str:
+    return password_hash.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return password_hash.verify(plain_password, hashed_password)
+
 def get_user_by_email(db: Session, email: str) -> Optional[User]:
     return db.query(User).filter(User.email == email).first()
 
-# ------------------------------
-# Get user by id
-# ------------------------------
 def get_user(db: Session, user_id: str) -> Optional[User]:
     return db.query(User).filter(User.user_id == user_id).first()
 
-# ------------------------------
-# Create user
-# ------------------------------
 def create_user(db: Session, user: UserCreate) -> User:
+    hashed = hash_password(user.password)
     db_user = User(
         name=user.name,
         email=user.email,
-        password_hash=user.password,  # hash before using in production!
+        password_hash=hashed
     )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
     return db_user
 
-# ------------------------------
-# Update user
-# ------------------------------
 def update_user(db: Session, db_user: User, updates: UserUpdate) -> User:
-    for field, value in updates.dict(exclude_unset=True).items():
-        setattr(db_user, field, value)
+    data = updates.dict(exclude_unset=True)
+    if "password" in data:
+        data["password_hash"] = hash_password(data.pop("password"))
+    for k, v in data.items():
+        setattr(db_user, k, v)
     db.commit()
     db.refresh(db_user)
     return db_user
 
-# ------------------------------
-# Delete user
-# ------------------------------
 def delete_user(db: Session, db_user: User):
     db.delete(db_user)
     db.commit()

@@ -1,35 +1,81 @@
-# app/schemas/websites.py
+# app/schemas/website.py
+from typing import Optional, List, Dict, Any
 from datetime import datetime
-from typing import Optional, Any
+
 from pydantic import BaseModel
 
+
+# -------------------------------------------------
+# Base Website schemas (used by CRUD + responses)
+# -------------------------------------------------
+
 class WebsiteBase(BaseModel):
+    
+    title: Optional[str] = None
+    theme: Optional[str] = "default"
+    config: Dict[str, Any] = {}   # hero, about, artworks_section, etc.
+    status: str = "draft"         # 'draft', 'published', 'archived'
+
+
+class WebsiteCreate(WebsiteBase):
+    """Used when creating from admin or tests.
+       For /websites/me we’ll build payload manually on PUT."""
+    pass
+
+
+class WebsiteUpdate(BaseModel):
+    """Partial update for website (used in /websites/{id} and /websites/me)."""
+    
+    title: Optional[str] = None
+    theme: Optional[str] = None
+    config: Optional[Dict[str, Any]] = None
+    status: Optional[str] = None
+    published_url: Optional[str] = None  # set by backend when publishing
+
+
+class WebsiteResponse(WebsiteBase):
     website_id: str
     artist_id: str
-    domain: Optional[str]
-    title: Optional[str]
-    theme: Optional[str]
-    config: Optional[Any]
-    published_url: Optional[str]
-    status: str
+    published_url: Optional[str] = None
+    # we don’t expose is_deleted here; it’s internal
     created_at: datetime
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
-class WebsiteCreate(BaseModel):
-    domain: Optional[str]
-    title: Optional[str]
-    theme: Optional[str]
-    config: Optional[Any]
 
-class WebsiteUpdate(BaseModel):
-    domain: Optional[str]
-    title: Optional[str]
-    theme: Optional[str]
-    config: Optional[Any]
-    status: Optional[str]
+# -------------------------------------------------
+# Extra schemas for builder + public website
+# -------------------------------------------------
 
-class WebsiteResponse(WebsiteBase):
-    pass
+class ArtworkSummary(BaseModel):
+    artwork_id: str
+    title: str
+    price: Optional[float] = None
+    availability: Optional[str] = None
+    file_url: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ArtistPublic(BaseModel):
+    user_id: str
+    name: str
+    profile_pic: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class WebsiteMeResponse(BaseModel):
+    website: WebsiteResponse
+    artworks: List[ArtworkSummary]
+    artist: ArtistPublic
+
+
+class PublicWebsiteResponse(BaseModel):
+    website: WebsiteResponse
+    artist: ArtistPublic
+    artworks: List[ArtworkSummary]

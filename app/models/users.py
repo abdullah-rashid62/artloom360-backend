@@ -1,7 +1,7 @@
 # app/models/users.py
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime
+from sqlalchemy import Column, String, DateTime, Text
 from app.core.database import Base
 
 def gen_uuid():
@@ -14,7 +14,7 @@ class User(Base):
     name = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
-    profile_pic = Column(String(1024), nullable=True)
+    profile_pic = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     def __repr__(self):

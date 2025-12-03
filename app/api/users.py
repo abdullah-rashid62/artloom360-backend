@@ -1,38 +1,41 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
+from datetime import timedelta
 
-from app.schemas import UserCreate, UserUpdate, UserResponse
+from app.schemas.users import UserCreate, UserLogin, UserResponse, TokenResponse
 from app.crud import users as crud_users
-from app.api.deps import get_db
+from app.core.database import SessionLocal
+from app.utils.auth import create_access_token, get_current_active_user, get_db, ACCESS_TOKEN_EXPIRE_MINUTES
 
-router = APIRouter(prefix="/users", tags=["Users"])
+router = APIRouter(prefix="/auth", tags=["Users"])
 
-@router.post("/", response_model=UserResponse)
-def create_user(user: UserCreate, db: Session = Depends(get_db)):
+@router.post("/signup", response_model=TokenResponse)
+def signup(user: UserCreate, db: Session = Depends(get_db)):
     existing_user = crud_users.get_user_by_email(db, user.email)
     if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    return crud_users.create_user(db, user)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered",
+        )
 
-@router.get("/{user_id}", response_model=UserResponse)
-def get_user(user_id: str, db: Session = Depends(get_db)):
-    db_user = crud_users.get_user(db, user_id)
-    if not db_user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return db_user
+    new_user = crud_users.create_user(db, user)
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": new_user.user_id},  
+        expires_delta=access_token_expires,
+    )
 
-@router.put("/{user_id}", response_model=UserResponse)
-def update_user(user_id: str, updates: UserUpdate, db: Session = Depends(get_db)):
-    db_user = crud_users.get_user(db, user_id)
-    if not db_user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return crud_users.update_user(db, db_user, updates)
+    return {"access_token": access_token, "token_type": "bearer", "user": new_user}
 
-@router.delete("/{user_id}")
-def delete_user(user_id: str, db: Session = Depends(get_db)):
-    db_user = crud_users.get_user(db, user_id)
-    if not db_user:
-        raise HTTPException(status_code=404, detail="User not found")
-    crud_users.delete_user(db, db_user)
-    return {"detail": "User deleted successfully"}
+@router.post("/login", response_model=TokenResponse)
+def login(user: UserLogin, db: Session = Depends(get_db)):
+    db_user = crud_users.get_user_by_email(db, user.email)
+    if not db_user or not crud_users.verify_password(user.password, db_user.password_hash):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(data={"sub": db_user.user_id}, expires_delta=access_token_expires)
+    return {"access_token": access_token, "token_type": "bearer", "user": db_user}
+
+@router.get("/me", response_model=UserResponse)
+def read_current_user(current_user = Depends(get_current_active_user)):
+    return current_user
