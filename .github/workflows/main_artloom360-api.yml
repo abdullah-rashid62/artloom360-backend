@@ -49,7 +49,7 @@ jobs:
       - name: Deploy to Azure Web App using publish profile
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'artloom360-api' # your Web App name
-          slot-name: 'Production'
+          app-name: 'artloom360-api-bsa4czfwdmc2geb8'
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: .
+
