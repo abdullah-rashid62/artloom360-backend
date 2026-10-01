@@ -71,7 +71,6 @@ app/
 ├── main.py       Application entry point and router registration
 └── seed.py       Development data script
 migrations/       Alembic environment and schema revisions
-.github/workflows/ Azure deployment workflow
 ```
 
 ## Engineering highlights
@@ -89,7 +88,7 @@ These are concrete implementation details worth exploring in the code, alongside
 
 ## Local setup
 
-Use Python 3.12, matching the deployment workflow, and a local MySQL instance. Cloudinary credentials are needed to exercise media upload signing.
+Use Python 3.12 and a local MySQL instance. Cloudinary credentials are needed to exercise media upload signing.
 
 ### 1. Install dependencies
 
@@ -206,18 +205,3 @@ Current product → Correctness & security → Automated tests → CI quality ga
 | 4 — Engineer | — | Rate limiting, analytics ingestion improvements, performance testing, and background jobs/queues if justified by measured needs. |
 | 5 — Product features | — | Notifications, private exhibitions, and payments. |
 
-### Verification status
-
-Local verification on October 1, 2026 used a fresh **Python 3.11.9** virtual environment and a temporary **MySQL 8.0** database:
-
-- Requirements installation and `pip check` passed; application imports, Argon2 password verification, and JWT round trips passed.
-- `alembic upgrade head` reached `27803da7616e`; `uvicorn app.main:app --reload` started successfully. Swagger UI, ReDoc, and the OpenAPI token URL were checked.
-- JSON signup/login, authenticated `/auth/me`, and rejection of missing/invalid credentials passed.
-- CORS defaults, whitespace/empty-entry parsing, empty allowlists, wildcard rejection, and allowed/disallowed preflights with credential headers passed.
-- Both corrected queries returned eligible artwork and excluded drafts, archived artwork, and another artist's artwork against MySQL. The website builder response was also checked over HTTP.
-
-These were one-off smoke checks, not a committed automated test suite or proof of production readiness. Python 3.12 was not installed on the verification machine, so the recommended/deployment runtime still needs a fresh-environment verification run. Cloudinary uploads and full product workflows were not exercised. The temporary database and server were removed after verification.
-
-The repository includes an [Azure deployment workflow](.github/workflows/main_artloom360-api.yml). It installs dependencies with Python 3.12 and deploys the application; it currently has no automated test or lint gate. An automated test suite is an upcoming milestone.
-
-As improvements land, this roadmap will be updated to reflect completed work and the evidence used to validate it.
