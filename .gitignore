@@ -35,6 +35,7 @@ Thumbs.db
 .env
 .env.*
 *.env
+!.env.example
 secrets.json
 
 # ---- Testing ----
@@ -49,3 +50,6 @@ htmlcov/
 
 # ---- Cache ----
 .cache/
+
+# ---- Doc ----
+BACKEND_ENGINEERING_REVIEW.md

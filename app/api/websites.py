@@ -92,7 +92,8 @@ def get_my_website(
         db.query(Artwork)
         .filter(
             Artwork.artist_id == current_user.user_id,
-            Artwork.status != "archived" and Artwork.status != "draft",
+            Artwork.status != "archived",
+            Artwork.status != "draft",
         )
         .all()
     )

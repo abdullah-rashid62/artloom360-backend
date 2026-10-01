@@ -16,7 +16,16 @@ def get_artwork(db: Session, artwork_id: str) -> Optional[Artwork]:
 
 
 def get_artworks_by_artist(db: Session, artist_id: str) -> List[Artwork]:
-    return db.query(Artwork).filter(Artwork.artist_id == artist_id, Artwork.status != "archived" and Artwork.status != "draft",).order_by(Artwork.created_at.desc()).all()
+    return (
+        db.query(Artwork)
+        .filter(
+            Artwork.artist_id == artist_id,
+            Artwork.status != "archived",
+            Artwork.status != "draft",
+        )
+        .order_by(Artwork.created_at.desc())
+        .all()
+    )
 
 def create_artwork(db: Session, artist_id: str, artwork: ArtworkCreate) -> Artwork:
     data = artwork.dict(exclude_unset=True)
